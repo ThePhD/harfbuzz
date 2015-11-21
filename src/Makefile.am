@@ -15,6 +15,7 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 
 # Convenience targets:
 lib: $(BUILT_SOURCES) libharfbuzz.la
+fuzzing: $(BUILT_SOURCES) libharfbuzz-fuzzing.la
 
 lib_LTLIBRARIES = libharfbuzz.la
 
@@ -41,6 +42,7 @@ HBSOURCES =  \
 	hb-open-file-private.hh \
 	hb-open-type-private.hh \
 	hb-ot-cmap-table.hh \
+	hb-ot-glyf-table.hh \
 	hb-ot-head-table.hh \
 	hb-ot-hhea-table.hh \
 	hb-ot-hmtx-table.hh \
@@ -149,7 +151,12 @@ endif
 if HAVE_FREETYPE
 HBCFLAGS += $(FREETYPE_CFLAGS)
 HBLIBS   += $(FREETYPE_LIBS)
-HBDEPS   += $(FREETYPE_DEPS)
+# XXX
+# The following creates a recursive dependency on FreeType if FreeType is
+# built with HarfBuzz support enabled.  Newer pkg-config handles that just
+# fine but pkg-config 0.26 as shipped in Ubuntu 14.04 crashes.  Remove
+# in a year or two, or otherwise work around it...
+#HBDEPS   += $(FREETYPE_DEPS)
 HBSOURCES += hb-ft.cc
 HBHEADERS += hb-ft.h
 endif
@@ -212,6 +219,22 @@ nodist_pkginclude_HEADERS = $(HBNODISTHEADERS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = harfbuzz.pc
 EXTRA_DIST += harfbuzz.pc.in
+
+FUZZING_CPPFLAGS= \
+	-DHB_MAX_NESTING_LEVEL=3 \
+	-DHB_SANITIZE_MAX_EDITS=3 \
+	-DHB_BUFFER_MAX_EXPANSION_FACTOR=3 \
+	-DHB_BUFFER_MAX_LEN_MIN=8 \
+	-DHB_BUFFER_MAX_LEN_DEFAULT=128 \
+	$(NULL)
+EXTRA_LTLIBRARIES = libharfbuzz-fuzzing.la
+libharfbuzz_fuzzing_la_LINK = $(libharfbuzz_la_LINK)
+libharfbuzz_fuzzing_la_SOURCES = $(libharfbuzz_la_SOURCES)
+libharfbuzz_fuzzing_la_CPPFLAGS = $(libharfbuzz_la_CPPFLAGS) $(FUZZING_CPPFLAGS)
+libharfbuzz_fuzzing_la_LDFLAGS = $(libharfbuzz_la_LDFLAGS)
+libharfbuzz_fuzzing_la_LIBADD = $(libharfbuzz_la_LIBADD)
+EXTRA_libharfbuzz_fuzzing_la_DEPENDENCIES = $(EXTRA_libharfbuzz_la_DEPENDENCIES)
+CLEANFILES += libharfbuzz-fuzzing.la
 
 if HAVE_ICU
 lib_LTLIBRARIES += libharfbuzz-icu.la

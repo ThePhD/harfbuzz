@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [1.0.1],
+        [1.1.0],
         [http://bugs.freedesktop.org/enter_bug.cgi?product=harfbuzz],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -440,10 +440,10 @@ src/hb-ucdn/Makefile
 util/Makefile
 test/Makefile
 test/api/Makefile
+test/fuzzing/Makefile
 test/shaping/Makefile
 docs/Makefile
-docs/reference/Makefile
-docs/reference/version.xml
+docs/version.xml
 ])
 
 AC_OUTPUT
